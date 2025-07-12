@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model department {
+  department_id                             Int       @id @default(autoincrement())
+  name                                      String    @db.VarChar(100)
+  head_id                                   Int?      @unique(map: "Department_head_id_key")
+  created_at                                DateTime  @default(now())
+  updated_at                                DateTime  @updatedAt
+  teacher_department_head_idToteacher       teacher?  @relation("department_head_idToteacher", fields: [head_id], references: [teacher_id], map: "Department_head_id_fkey")
+  filieres                                  filiere[]
+  student                                   student[]
+  subject                                   subject[]
+  teacher_teacher_department_idTodepartment teacher[] @relation("teacher_department_idTodepartment")
+}
+
+model session {
+  session_id    Int         @id @default(autoincrement())
+  session_type  session_type
+  date_debut    DateTime
+  date_fin      DateTime
+  is_validated  Boolean     @default(false)
+  exams         exam[]      // Relation 1-N avec Exam
+}
+
+model exam {
+  exam_id        Int              @id @default(autoincrement())
+  subject_id     Int
+  exam_date      DateTime
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  is_duplicate   Boolean
+  session_id     Int
+  duration       exam_duration
+  session        session  @relation(fields: [session_id], references: [session_id])
+  subject        subject          @relation(fields: [subject_id], references: [subject_id], map: "Exam_subject_id_fkey")
+  examroom       examroom?
+  examstudent    examstudent[]
+  supervisorexam supervisorexam[]
+  validation     validation[]
+
+  @@index([subject_id], map: "Exam_subject_id_fkey")
+}
+
+model examroom {
+  exam_id    Int       @unique(map: "ExamRoom_exam_id_key")
+  room_id    Int
+  created_at DateTime  @default(now())
+  end_time   DateTime?
+  start_time DateTime?
+  exam       exam      @relation(fields: [exam_id], references: [exam_id], map: "ExamRoom_exam_id_fkey")
+  room       room      @relation(fields: [room_id], references: [room_id], map: "ExamRoom_room_id_fkey")
+
+  @@id([exam_id, room_id])
+  @@index([room_id], map: "ExamRoom_room_id_fkey")
+}
+
+model examstudent {
+  exam_id     Int
+  student_id  Int
+  exam_status examstudent_exam_status
+  created_at  DateTime                @default(now())
+  exam        exam                    @relation(fields: [exam_id], references: [exam_id], map: "ExamStudent_exam_id_fkey")
+  student     student                 @relation(fields: [student_id], references: [student_id], map: "ExamStudent_student_id_fkey")
+
+  @@id([exam_id, student_id])
+  @@index([student_id], map: "ExamStudent_student_id_fkey")
+}
+
+model filiere {
+  filiere_name  String     @id @db.VarChar(100)
+  department_id Int
+  department    department @relation(fields: [department_id], references: [department_id])
+  groups        group[]
+  students      student[]
+  subjects      subject[]
+
+  @@index([department_id], map: "filiere_department_id_fkey")
+}
+
+model group {
+  group_id     Int       @id @default(autoincrement())
+  group_name   String    @db.VarChar(100)
+  filiere_name String
+  filiere      filiere   @relation(fields: [filiere_name], references: [filiere_name])
+  students     student[]
+
+  @@unique([group_name, filiere_name])
+  @@index([filiere_name], map: "group_filiere_name_fkey")
+}
+
+model notification {
+  notification_id     Int                              @id @default(autoincrement())
+  user_id             Int
+  message             String
+  notification_status notification_notification_status
+  notification_type   notification_notification_type
+  created_at          DateTime                         @default(now())
+  user                user                             @relation(fields: [user_id], references: [user_id], map: "Notification_user_id_fkey")
+
+  @@index([user_id], map: "Notification_user_id_fkey")
+}
+
+model refreshtoken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique(map: "RefreshToken_token_key")
+  user_id   Int
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "RefreshToken_user_id_fkey")
+
+  @@index([user_id], map: "RefreshToken_user_id_fkey")
+}
+
+model room {
+  room_id        Int              @id @default(autoincrement())
+  room_name      String           @db.VarChar(50)
+  capacity       Int
+  location       String           @db.VarChar(100)
+  is_available   Boolean
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  examroom       examroom[]
+  supervisorexam supervisorexam[]
+}
+
+model schedulelog {
+  log_id       Int      @id @default(autoincrement())
+  action       String   @db.VarChar(50)
+  description  String
+  performed_by Int
+  timestamp    DateTime
+  user         user     @relation(fields: [performed_by], references: [user_id], map: "ScheduleLog_performed_by_fkey")
+
+  @@index([performed_by], map: "ScheduleLog_performed_by_fkey")
+}
+
+model student {
+  student_id    Int           @id @default(autoincrement())
+  user_id       Int           @unique(map: "Student_user_id_key")
+  department_id Int
+  program       String        @db.VarChar(100)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  filiere_name  String
+  group_id      Int?
+  examstudent   examstudent[]
+  department    department    @relation(fields: [department_id], references: [department_id], map: "Student_department_id_fkey")
+  user          user          @relation(fields: [user_id], references: [user_id], map: "Student_user_id_fkey")
+  filiere       filiere       @relation(fields: [filiere_name], references: [filiere_name])
+  group         group?        @relation(fields: [group_id], references: [group_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([department_id], map: "Student_department_id_fkey")
+  @@index([filiere_name], map: "student_filiere_name_fkey")
+  @@index([group_id], map: "student_group_id_fkey")
+}
+
+model subject {
+  subject_id     Int                 @id
+  name           String              @db.VarChar(100)
+  created_at     DateTime            @default(now())
+  updated_at     DateTime            @updatedAt
+  department_id  Int
+  coefficient    subject_coefficient
+  filiere_name   String
+  exam           exam[]
+  department     department          @relation(fields: [department_id], references: [department_id], map: "Subject_department_id_fkey")
+  filiere        filiere             @relation(fields: [filiere_name], references: [filiere_name])
+  teachersubject teachersubject[]
+
+  @@index([department_id], map: "Subject_department_id_fkey")
+  @@index([filiere_name], map: "subject_filiere_name_fkey")
+}
+
+model supervisorexam {
+  supervisor_id         Int
+  exam_id               Int
+  room_id               Int
+  created_at            DateTime  @default(now())
+  end_time              DateTime?
+  start_time            DateTime?
+  validated_by_director Boolean   @default(false)
+  validated_by_hod      Boolean   @default(false)
+  monitor_id            Int       @id @default(autoincrement())
+  exam                  exam      @relation(fields: [exam_id], references: [exam_id])
+  room                  room      @relation(fields: [room_id], references: [room_id])
+  teacher               teacher   @relation(fields: [supervisor_id], references: [teacher_id])
+
+  @@index([exam_id], map: "supervisorexam_exam_id_fkey")
+  @@index([room_id], map: "supervisorexam_room_id_fkey")
+  @@index([supervisor_id], map: "supervisorexam_supervisor_id_fkey")
+}
+
+model teacher {
+  teacher_id                                   Int              @id @default(autoincrement())
+  user_id                                      Int              @unique(map: "Teacher_user_id_key")
+  department_id                                Int
+  title                                        teacher_title
+  created_at                                   DateTime         @default(now())
+  updated_at                                   DateTime         @updatedAt
+  department_department_head_idToteacher       department?      @relation("department_head_idToteacher")
+  supervisorexam                               supervisorexam[]
+  department_teacher_department_idTodepartment department       @relation("teacher_department_idTodepartment", fields: [department_id], references: [department_id], map: "Teacher_department_id_fkey")
+  user                                         user             @relation(fields: [user_id], references: [user_id], map: "Teacher_user_id_fkey")
+  teachersubject                               teachersubject[]
+
+  @@index([department_id], map: "Teacher_department_id_fkey")
+}
+
+model teachersubject {
+  teacher_id Int
+  subject_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  subject    subject  @relation(fields: [subject_id], references: [subject_id], map: "TeacherSubject_subject_id_fkey")
+  teacher    teacher  @relation(fields: [teacher_id], references: [teacher_id], map: "TeacherSubject_teacher_id_fkey")
+
+  @@id([teacher_id, subject_id])
+  @@index([subject_id], map: "TeacherSubject_subject_id_fkey")
+}
+
+model user {
+  user_id      Int            @id @default(autoincrement())
+  name         String         @db.VarChar(100)
+  email        String         @db.VarChar(100)
+  password     String         @db.VarChar(255)
+  role         user_role
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  is_active    Boolean
+  notification notification[]
+  refreshtoken refreshtoken[]
+  schedulelog  schedulelog[]
+  student      student?
+  teacher      teacher?
+  validation   validation[]
+}
+
+model validation {
+  validation_id   Int               @id @default(autoincrement())
+  exam_id         Int
+  validated_by    Int
+  status          validation_status
+  comments        String?
+  validation_date DateTime          @default(now())
+  exam            exam              @relation(fields: [exam_id], references: [exam_id], map: "Validation_exam_id_fkey")
+  user            user              @relation(fields: [validated_by], references: [user_id], map: "Validation_validated_by_fkey")
+
+  @@index([exam_id], map: "Validation_exam_id_fkey")
+  @@index([validated_by], map: "Validation_validated_by_fkey")
+}
+
+enum examstudent_exam_status {
+  INSCRIT
+  ABSENT
+  ANNULE
+}
+
+enum validation_status {
+  EN_ATTENTE
+  VALIDE
+  REFUSE
+}
+
+enum notification_notification_status {
+  ENVOYEE
+  LUE
+  ARCHIVEE
+}
+
+enum teacher_title {
+  PROFESSEUR
+  PROFESSEUR_TRONC_COMMUN
+  MAITRE_ASSISTANT
+  MAITRE_DES_CONFERENCES
+  ASSISTANT
+  CONTRACTUEL
+}
+
+enum notification_notification_type {
+  MISE_A_JOUR
+  VALIDATION
+  RAPPEL
+}
+
+enum user_role {
+  ADMIN
+  CHEF
+  DIRECTEUR
+  ENSEIGNANT
+  ETUDIANT
+}
+
+enum subject_coefficient {
+  ZERO_POINT_FIVE
+  ONE
+  ONE_POINT_FIVE
+  TWO
+}
+
+enum exam_duration {
+  ONE
+  ONE_POINT_FIVE
+  TWO
+  THREE
+}
+
+enum session_type {
+  DS1
+  DS2
+  EX1
+  EX2
+  CONTROLE
+}
