@@ -34,8 +34,8 @@ Role-based web application designed to facilitate the exam scheduling procedure.
 
 2. Create a .env file in the root directory and add your environment variables.
    ```bash
-   DATABASE_URL="your_database_url_here"
    PORT=xxxx
+   DATABASE_URL="your_database_url_here"
    ACCESS_TOKEN_SECRET=your_access_token_here
    REFRESH_TOKEN_SECRET=your_refresh_token_here
    ```
