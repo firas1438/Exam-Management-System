@@ -32,7 +32,15 @@ Role-based web application designed to facilitate the exam scheduling procedure.
    cd exam-management-system
    ```
 
-2. Install dependencies
+2. Create a .env file in the root directory and add your environment variables.
+   ```bash
+   DATABASE_URL="your_database_url_here"
+   PORT=xxxx
+   ACCESS_TOKEN_SECRET=your_access_token_here
+   REFRESH_TOKEN_SECRET=your_refresh_token_here
+   ```
+
+3. Install dependencies
    ```bash
    npm install
    ```
