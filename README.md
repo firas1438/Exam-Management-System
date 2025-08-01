@@ -10,19 +10,24 @@ Role-based web application designed to facilitate the exam scheduling procedure.
 - Maintain session history for documentation purposes.
 
 ## Existing Roles
-1. Admin
-2. Department Chief
-3. Studies Director
+
+| Role                 | Responsibilities                                                                 |
+|----------------------|----------------------------------------------------------------------------------|
+| Administrator        | - Exam scheduling  <br> - Room and supervisor assignment <br> - Sending schedules by email (PDF format) <br> - Tracking session history |
+| Department Chief     | - Approving exams for their unique department                                    |
+| Studies Director     | - Final approval of exam schedules                                               |
+
 
 ## Technologies Used
-- TypeScript
-- Next.js
-- Framer Motion
-- Tailwind CSS
-- Recharts
-- Prisma ORM
-- JWT (JSON Web Tokens)
-- MySQL
+
+- **Framework:** Next.js  
+- **Backend Server:** Express.js  
+- **Animation:** Framer Motion  
+- **Styling:** Tailwind CSS  
+- **Visualization:** Recharts  
+- **ORM:** Prisma ORM  
+- **Authentication:** JWT (JSON Web Tokens)  
+- **Database:** MySQL  
 
 ## Getting Started
 
